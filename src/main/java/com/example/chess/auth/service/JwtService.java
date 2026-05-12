@@ -1,5 +1,6 @@
 package com.example.chess.auth.service;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
@@ -18,5 +19,22 @@ import java.util.Date;
                 .expiration(new Date(System.currentTimeMillis() + 1000*60*60*24))
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
+    }
+
+    public String extractEmail(String token){
+        Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return claims.getSubject();
+    }
+    public boolean isTokenValid(String token){
+        try{
+            extractEmail(token);
+            return true;
+        }catch(Exception e){
+            return false;
+        }
     }
 }
