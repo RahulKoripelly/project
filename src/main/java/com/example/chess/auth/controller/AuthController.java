@@ -1,5 +1,7 @@
 package com.example.chess.auth.controller;
 
+import com.example.chess.auth.dto.AuthResponse;
+import com.example.chess.auth.dto.LoginRequest;
 import com.example.chess.auth.dto.RegisterRequest;
 import com.example.chess.auth.service.AuthService;
 import jakarta.validation.Valid;
@@ -19,5 +21,10 @@ public class AuthController {
     @PostMapping("/register")
     private String regsiter(@Valid@RequestBody RegisterRequest request){
         return authService.register(request);
+    }
+
+    @PostMapping("/login")
+    private AuthResponse login(@RequestBody LoginRequest request){
+        return authService.login(request);
     }
 }
