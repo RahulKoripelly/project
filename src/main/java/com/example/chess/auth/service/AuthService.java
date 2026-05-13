@@ -2,10 +2,12 @@ package com.example.chess.auth.service;
 
 import com.example.chess.auth.dto.AuthResponse;
 import com.example.chess.auth.dto.LoginRequest;
+import com.example.chess.auth.dto.RefreshTokenRequest;
 import com.example.chess.auth.dto.RegisterRequest;
 import com.example.chess.user.entity.User;
 import com.example.chess.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final StringRedisTemplate redisTemplate;
 
     public String register(RegisterRequest request){
 
@@ -46,9 +49,31 @@ public class AuthService {
         if(!passwordMatches){
             throw new RuntimeException("Invalid Email or Password");
         }
-        String token = jwtService.generateToken(user.getEmail());
+        String accessToken = jwtService.generateAccessToken(user.getEmail());
 
-        return new AuthResponse(token);
+        String refreshToken = jwtService.generateRefreshToken(user.getEmail());
+
+        return new AuthResponse(accessToken, refreshToken);
+    }
+
+    public AuthResponse refreshToken(RefreshTokenRequest request){
+        String refreshToken = request.getRefreshToken();
+
+        if(!jwtService.isTokenValid(refreshToken)){
+            throw new RuntimeException("Invalid Refresh Token");
+        }
+        String email = jwtService.extractEmail(refreshToken);
+
+        String newAccessToken = jwtService.generateAccessToken(email);
+
+        return new AuthResponse(newAccessToken, refreshToken);
+    }
+
+    public String logout(String token){
+        redisTemplate.opsForValue()
+                .set(token, "blacklisted");
+
+        return "Logged Out Successfully";
     }
 
 }

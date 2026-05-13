@@ -12,7 +12,14 @@ import java.util.Date;
 @Service public class JwtService {
     private static final String secret_KEY = "myverysecuresecretkeywithatleast32characters";
     SecretKey key= Keys.hmacShaKeyFor(secret_KEY.getBytes());
-    public String generateToken(String email){
+    public String generateAccessToken(String email){
+        return generateToken(email, 1000*60*30);
+    }
+
+    public String generateRefreshToken(String email){
+        return generateToken(email, 1000L*60*60*24*7);
+    }
+    public String generateToken(String email, long expiry){
         return Jwts.builder()
                 .subject(email)
                 .issuedAt(new Date())
